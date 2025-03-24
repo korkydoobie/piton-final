@@ -1,0 +1,60 @@
+import tkinter as tk
+from tkinter import messagebox
+from interface import CrimeRecordApp
+
+
+class LoginWindow:
+    def __init__(self, root):
+        #///////////////////////////////////////ROOT////////////////////////////
+        self.root = root
+        self.root.geometry("800x400+600+50")
+        self.root.title("LOGIN WINDOW")
+        #///////////////////ENTRY FRAME////////////////////
+        self.frameentry = tk.Frame(self.root)
+        self.frameentry.grid(row=0, column=0)
+        
+        self.lbl1 = tk.Label(self.frameentry, text="user:")
+        self.lbl1.grid(row=0, column=0)
+
+        self.userentry = tk.Entry(self.frameentry)
+        self.userentry.grid(row=0, column=1)
+        
+        self.lbl2 = tk.Label(self.frameentry, text="password:")
+        self.lbl2.grid(row=1, column=0)
+        
+        self.passentry = tk.Entry(self.frameentry, show="*", width=20)
+        self.passentry.grid(row=1, column=1)
+
+        self.loginbtn = tk.Button(self.frameentry, text="Login", command=self.validateLogin)
+        self.loginbtn.grid(row=2, column=1, columnspan=2)
+        #///////////////////ENTRY FRAME////////////////////
+        
+        self.output_label = tk.Label(self.root, text="", fg="red")
+        self.output_label.grid(row=1, column=0)
+        #///////////////////////////////////////ROOT////////////////////////////
+
+    def validateLogin(self):
+        print(f'Your user is: {self.userentry.get()}: and password {self.passentry.get()} ')
+        if self.userentry.get() == "luther":
+            if self.passentry.get() == "123":
+                print('Login successful')
+                self.output_label.config(text="Login Successful!", fg="green")
+                self.root.destroy()
+                self.open_menu_window()
+            else:
+                print('Wrong passs')
+                self.output_label.config(text="Invalid password", fg="red")
+        else:
+            print('Login failed wrong user')
+            self.output_label.config(text="Invalid username", fg="red")
+
+    def open_menu_window(self):
+        menuroot = tk.Tk()
+        CrimeRecordApp(menuroot)
+        menuroot.mainloop()
+
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = LoginWindow(root)
+    root.mainloop()
