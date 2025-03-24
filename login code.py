@@ -39,14 +39,17 @@ class LoginWindow:
             if self.passentry.get() == "123":
                 print('Login successful')
                 self.output_label.config(text="Login Successful!", fg="green")
+                messagebox.showinfo('SUCCESS LOGIN', 'TANGINAMO')
                 self.root.destroy()
                 self.open_menu_window()
             else:
                 print('Wrong passs')
                 self.output_label.config(text="Invalid password", fg="red")
+                messagebox.showinfo('FAILED LOGIN', 'TANGINAMO MALI PASS')
         else:
             print('Login failed wrong user')
             self.output_label.config(text="Invalid username", fg="red")
+            messagebox.showinfo('FAILED LOGIN', 'TANGINAMO MALI USER')
 
     def open_menu_window(self):
         menuroot = tk.Tk()
