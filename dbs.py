@@ -28,6 +28,15 @@ def connectDb():
 def add_crimes():
     conn = sqlite3.connect("criminal_records.db")
     cur = conn.cursor()
+    
+    # Check if the crimes table already has content
+    cur.execute("SELECT COUNT(*) FROM crimes")
+    count = cur.fetchone()[0]
+    
+    if count > 0:
+        conn.close()
+        return
+    
     crimes = [
         ('Murder', 20),
         ('Illegal Drug Trade', 12),
@@ -52,3 +61,13 @@ def add_record(criminal_id, name, crime, location, date, mugshot):
     conn.commit()
     conn.close()
     
+def search(criminal_id):
+    conn = sqlite3.connect("criminal_records.db")
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT * FROM records
+        WHERE ID = ?
+    """, (criminal_id,))
+    result = cur.fetchone()
+    conn.close()
+    return result
