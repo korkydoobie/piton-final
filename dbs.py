@@ -4,13 +4,21 @@ def connectDb():
     conn = sqlite3.connect("criminal_records.db")
     cur = conn.cursor()
     cur.execute("""
+        CREATE TABLE IF NOT EXISTS crimes (
+            crime_Id INTEGER PRIMARY KEY AUTOINCREMENT,
+            crime_name TEXT NOT NULL,
+            confinement INTEGER NOT NULL
+        )
+    """)
+    cur.execute("""
         CREATE TABLE IF NOT EXISTS records (
             ID INTEGER PRIMARY KEY,
             name TEXT NOT NULL,
-            crime TEXT NOT NULL,
+            crime_Id INTEGER NOT NULL,
             location TEXT NOT NULL,
             date INTEGER NOT NULL,
-            mugshot BLOB NOT NULL
+            mugshot BLOB NOT NULL,
+            FOREIGN KEY (crime_Id) REFERENCES crimes(crime_Id)
         )
     """)
     conn.commit()
