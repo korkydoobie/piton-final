@@ -83,74 +83,79 @@ def editRecord():
     frame.place(relx=0.20, y=80)
     tk.Label(frame, text="Enter Criminal ID to edit: ", font=("Arial", 14, "bold")).grid(row=1, column=0, padx=10, pady=10, sticky="w")
     criminalId = tk.Entry(frame, width=30, bd=3)
-    criminalId.grid(row=1, column=1, padx=250, pady=10)
+    criminalId.grid(row=1, column=1, padx=220, pady=10)
 
     def checkId():
         crimId = criminalId.get().strip()
-
         if not crimId.isdigit():    #checker if valid input(numbers only)
 
             messagebox.showerror("Wrong input!", "Enter a number only.")
             edit_window.focus_force() #napupunta sa likod ng main menu yung editwindow pag wala to
         
         else:
-         crimId = int(crimId)
-
-         if not dbs.checkExist(crimId): #checks if inputted ID is on the database
-             messagebox.showerror("Criminal not found", "Criminal does not exist.")
-             edit_window.focus_force() #napupunta sa likod ng main menu yung editwindow pag wala to
-         else:
-             criminalId.config(state="readonly")
-             submit.destroy()
-             crimData = dbs.getCriminalData(crimId)
-           #Name update
+            crimId = int(crimId)
+    
+            if not dbs.checkExist(crimId): #checks if inputted ID is on the database
+                messagebox.showerror("Criminal not found", "Criminal does not exist.")
+                edit_window.focus_force() #napupunta sa likod ng main menu yung editwindow pag wala to
+            else:
+                criminalId.config(state="readonly")
+                submit.destroy()
+                crimData = dbs.getCriminalData(crimId)
+                 #Name update
         
 
-             tk.Label(frame, text=f"Name: ", font=("Arial", 14, "bold")).grid(row=3, column=0, padx=10, pady=10, sticky="w")
-             criminalName = tk.Entry(frame, width=30, bd=3)
-             criminalName.grid(row=3, column=1, padx=250, pady=10)
-             criminalName.insert(0, crimData["name"])
+                tk.Label(frame, text=f"Name: ", font=("Arial", 14, "bold")).grid(row=3, column=0, padx=10, pady=10, sticky="w")
+                criminalName = tk.Entry(frame, width=30, bd=3)
+                criminalName.grid(row=3, column=1, padx=220, pady=10)
+                criminalName.insert(0, crimData["name"])
 
                     #Crime
-             crime_var = tk.StringVar()
-             crime_var.set(crimData["crime"])
-             tk.Label(frame, text="Crime: ", font=("Arial", 14, "bold")).grid(row=5, column=0, padx=10, pady=10, sticky="w")
-             crime_options = ["Felony", "Misdemeanor", "Theft", "Assault", "Fraud"]
-             crime_dropdown = tk.OptionMenu(frame, crime_var, *crime_options)
-             crime_dropdown.grid(row=5, column=1, padx=250, pady=10)
-             crime_dropdown.config(width=24, bd=3)
+                crime_var = tk.StringVar()
+                crime_var.set(crimData["crime"])
+                tk.Label(frame, text="Crime: ", font=("Arial", 14, "bold")).grid(row=5, column=0, padx=10, pady=10, sticky="w")
+                crime_options = ["Felony", "Misdemeanor", "Theft", "Assault", "Fraud"]
+                crime_dropdown = tk.OptionMenu(frame, crime_var, *crime_options)
+                crime_dropdown.grid(row=5, column=1, padx=220, pady=10)
+                crime_dropdown.config(width=24, bd=3)
             
 
-             #Location
-             tk.Label(frame, text="Location: ", font=("Arial", 14, "bold")).grid(row=7, column=0, padx=10, pady=10, sticky="w")
-             criminalLocation = tk.Entry(frame, width=30, bd=3)
-             criminalLocation.grid(row=7, column=1, padx=2, pady=10)
-             criminalLocation.insert(0, crimData["location"])
+              #Location
+                tk.Label(frame, text="Location: ", font=("Arial", 14, "bold")).grid(row=7, column=0, padx=10, pady=10, sticky="w")
+                criminalLocation = tk.Entry(frame, width=30, bd=3)
+                criminalLocation.grid(row=7, column=1, padx=2, pady=10)
+                criminalLocation.insert(0, crimData["location"])
 
 
-             #Date
-             tk.Label(frame, text="Year of Arrest: ", font=("Arial", 14, "bold")).grid(row=9, column=0, padx=10, pady=10, sticky="w")
-             recordDate = tk.Entry(frame, width=30, bd=3)
-             recordDate.grid(row=9,column=1, padx =2, pady=10)
-             recordDate.insert(0, crimData["date"])
+                #Date
+                tk.Label(frame, text="Year of Arrest: ", font=("Arial", 14, "bold")).grid(row=9, column=0, padx=10, pady=10, sticky="w")
+                recordDate = tk.Entry(frame, width=30, bd=3)
+                recordDate.grid(row=9,column=1, padx =2, pady=10)
+                recordDate.insert(0, crimData["date"])
 
              
-             def submitEdit():
-                crimName = criminalName.get().strip()
-                crimDesc = crime_var.get().strip()
-                crimeLoc = criminalLocation.get().strip()
-                crimeDate = recordDate.get().strip()
-                if (messagebox.askokcancel(title="Confirm update", message="Are you sure you want to update the record?")): 
+                def submitEdit():
+                    crimName = criminalName.get().strip()
+                    crimDesc = crime_var.get().strip()
+                    crimeLoc = criminalLocation.get().strip()
+                    crimeDate = recordDate.get().strip()
+                    if (messagebox.askokcancel(title="Confirm update", message="Are you sure you want to update the record?")): 
+                        
+                        dbs.editRecord(crimId, crimName, crimDesc, crimeLoc, crimeDate)
+                        messagebox.showinfo(title="Update Success!", message="Successfully updated the record!")
+                    else:
+                        edit_window.focus_force()
+                
+                def cancelEdit():
+                    if (messagebox.askyesno(title="Cancel Edit", message="Are you sure you want to cancel editing? Unsaved changes will be lost.")):
+                        edit_window.destroy()
                     
-                    dbs.editRecord(crimId, crimName, crimDesc, crimeLoc, crimeDate)
-                    messagebox.showinfo(title="Update Success!", message="Successfully updated the record!")
-                else:
-                    edit_window.focus_force()
-             
 
 
-             update = tk.Button(frame, text="Update Record", font=("Arial", 10, "bold"), command=submitEdit)
-             update.grid(row=10, column=0, columnspan=2, pady=10, sticky="nw")
+                update = tk.Button(frame, text="Update Record", font=("Arial", 10, "bold"), command=submitEdit)
+                cancel = tk.Button(frame, text="Cancel Update", font=("Arial", 10, "bold"), command=cancelEdit)
+                update.grid(row=10, column=1, padx=10,columnspan=2, pady=10, sticky="nw")
+                cancel.grid(row=11, column=1, padx=10, columnspan=2, pady=10, sticky="nw")
 
 
     submit = tk.Button(edit_window, text="Submit", width=15, bd=3, font=("Arial", 12), command=checkId)
@@ -158,7 +163,26 @@ def editRecord():
 
 
 
+def editCrime():
+    edit_window = tk.Toplevel()
+    edit_window.title("Edit Crime")
+    edit_window.geometry("900x900+450+40")
+    edit_title = tk.Label(edit_window, text="Edit Crime", font=("Arial", 20, "bold"))
+    edit_title.place(relx=0.35, y=20)
 
+    frame = tk.Frame(edit_window)
+    frame.place(relx=0.20, y=80)
+    crime_var = tk.StringVar()
+    crime_var.set("Select Crime")  # Default value
+
+    crime_options = ["Murder", "Illegal Drug Trade", "Theft", "Assault", "Fraud", 
+                    "Domestic Violence", "Slander", "Malicious Mischief", "Cyber Libel", "Identity Theft"]  #rereplace to ng dynamic(nakabase sa database)
+
+    tk.Label(frame, text="Select Crime to Edit:", font=("Arial", 14, "bold")).grid(row=1, column=0, padx=10, pady=10, sticky="w")
+
+    crime_dropdown = tk.OptionMenu(frame, crime_var, *crime_options)
+    crime_dropdown.grid(row=1, column=1, padx=10, pady=10)
+    crime_dropdown.config(width=30, bd=3)
 
 
 
@@ -168,6 +192,8 @@ add = tk.Button(root, text="Add Record", width=30, bd=5, font=("Arial", 12, "bol
 add.pack(padx=20, pady=20)
 edit = tk.Button(root, text="Edit Record", width=30, bd=5, font=("Arial", 12, "bold"), fg="White", bg="black", command=editRecord)
 edit.pack(padx=20, pady=20)
+crimedit = tk.Button(root, text="Edit Crime", width=30, bd=5, font=("Arial", 12, "bold"), fg="White", bg="black", command=editCrime)
+crimedit.pack(padx=20, pady=20)
 delete = tk.Button(root, text="Delete Record", width=30, bd=5, font=("Arial", 12, "bold"), fg="White", bg="black")
 delete.pack(padx=20, pady=20)
 logout = tk.Button(root, text="Logout", width=30, bd=5, font=("Arial", 12, "bold"), fg="White", bg="black")

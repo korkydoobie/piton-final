@@ -95,4 +95,7 @@ def editRecord(criminal_id, criminal_name, criminal_desc, criminal_location, cri
         cur.execute("UPDATE records SET name = ?, crime = ?, location = ?, date = ? WHERE id = ?", (criminal_name, criminal_desc, criminal_location, criminal_date, criminal_id))
         conn.commit()
         conn.close()
+
+
+        
     #end of carl methods
