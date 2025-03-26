@@ -1,5 +1,6 @@
 import sqlite3
 from tkinter import messagebox
+
 def connectDb():
     conn = sqlite3.connect("criminal_records.db")
     cur = conn.cursor()
@@ -8,7 +9,9 @@ def connectDb():
     cur.execute(""" 
         CREATE TABLE IF NOT EXISTS criminals (
         criminal_id INTEGER PRIMARY KEY AUTOINCREMENT,
-        criminal_name TEXT NOT NULL ) """)
+        criminal_name TEXT NOT NULL,
+        mugshot BLOB NOT NULL ) """)
+    
 
     #creation ng crime table
     cur.execute("""
@@ -29,7 +32,6 @@ def connectDb():
             location TEXT NOT NULL,
             year_of_arrest INTEGER NOT NULL,
             year_of_release INTEGER NOT NULL,
-            mugshot BLOB,
             FOREIGN KEY (crime_id) REFERENCES crimes(crime_id),
             FOREIGN KEY (criminal_id) REFERENCES criminals(criminal_id)
         )
@@ -75,11 +77,9 @@ def add_crimes(cname, time):
     
     
 
-    
-
 
 #carl methods
-def add_record(criminal_id, crime_id, location, date, mugshot): #updated
+def add_record(criminal_id, crime_id, location, date): #updated
     conn = sqlite3.connect("criminal_records.db")
     cur = conn.cursor()
 
@@ -90,7 +90,7 @@ def add_record(criminal_id, crime_id, location, date, mugshot): #updated
         confinement = result[0]
         releaseDate = int(date) + confinement
 
-        cur.execute("INSERT INTO records (criminal_id, crime_id, location, year_of_arrest, year_of_release, mugshot) VALUES (?, ?, ?, ?, ?, ?)", (criminal_id, crime_id, location, date, releaseDate, mugshot))
+        cur.execute("INSERT INTO records (criminal_id, crime_id, location, year_of_arrest, year_of_release) VALUES (?, ?, ?, ?, ?)", (criminal_id, crime_id, location, date, releaseDate))
         conn.commit()
         conn.close()
 
@@ -135,10 +135,10 @@ def checkExist(criminal_id):
 #     else:
 #         return None
     
-def addCriminal(cname):
+def addCriminal(cname, mugshot):
         conn = sqlite3.connect("criminal_records.db")
         cur = conn.cursor()
-        cur.execute("INSERT INTO Criminals (criminal_name) VALUES (?)", (cname,))
+        cur.execute("INSERT INTO Criminals (criminal_name, mugshot) VALUES (?, ?)", (cname, mugshot))
         conn.commit()
         conn.close()
         
