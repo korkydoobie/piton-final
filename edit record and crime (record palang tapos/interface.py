@@ -5,62 +5,62 @@ from tkinter import messagebox
 
 
 def addRecord():
-    add_window = tk.Toplevel()
-    add_window.title("Add Record")
-    add_window.geometry("800x400+600+50")
-    
-    title_label = tk.Label(add_window, text="ADD RECORD", font=("Arial", 20, "bold"))
-    title_label.place(relx=0.38, y=20)
-    
-    frame = tk.Frame(add_window)
-    frame.place(relx=0.20, y=80)
-    
-    randNum = random.randint(10000, 99999)
-    
-    #ID
-    tk.Label(frame, text="Criminal ID: ", font=("Arial", 14, "bold")).grid(row=0, column=0, padx=5, pady=10, sticky="e")
-    criminalId = tk.Label(frame, text=randNum, font=("Arial", 14, "bold"), width=30).grid(row=0, column=1, padx=10, pady=3)
-    
-    #Name
-    tk.Label(frame, text="Enter Name: ", font=("Arial", 14, "bold")).grid(row=1, column=0, padx=5, pady=10, sticky="e")
-    criminalName = tk.Entry(frame, width=30, bd=3)
-    criminalName.grid(row=1, column=1, padx=2, pady=10)
-    
-    #Crime
-    crime_var = tk.StringVar()
-    crime_var.set("Felony")
-    tk.Label(frame, text="Choose Crime: ", font=("Arial", 14, "bold")).grid(row=2, column=0, padx=5, pady=10, sticky="e")
-    crime_options = ["Felony", "Misdemeanor", "Theft", "Assault", "Fraud"]
-    crime_dropdown = tk.OptionMenu(frame, crime_var, *crime_options)
-    crime_dropdown.grid(row=2, column=1, padx=5, pady=10)
-    crime_dropdown.config(width=24, bd=3)
-    
-    #Location
-    tk.Label(frame, text="Enter Location: ", font=("Arial", 14, "bold")).grid(row=3, column=0, padx=5, pady=10, sticky="e")
-    criminalLocation = tk.Entry(frame, width=30, bd=3)
-    criminalLocation.grid(row=3, column=1, padx=2, pady=10)
-    
-    #Date
-    tk.Label(frame, text="Enter Date(YEAR): ", font=("Arial", 14, "bold")).grid(row=4, column=0, padx=5, pady=10, sticky="e")
-    recordDate = tk.Entry(frame, width=30, bd=3)
-    recordDate.grid(row=4, column=1, padx=2, pady=10)
-    
-    def add_to_db():
-        name = criminalName.get().strip()
-        crime = crime_var.get().strip()
-        location = criminalLocation.get().strip()
-        date = recordDate.get().strip()
+    criminal_list = dbs.getCriminalList()
+    if (criminal_list):
+        add_window = tk.Toplevel()
+        add_window.title("Add Record")
+        add_window.geometry("800x400+600+50")
         
-        if name == "" or location == "" or date == "":
-            messagebox.showerror("Error", "Name, Location and Date cannot be empty!")
-            return
+        title_label = tk.Label(add_window, text="ADD RECORD", font=("Arial", 20, "bold"))
+        title_label.place(relx=0.38, y=20)
         
-        dbs.add_record(randNum, name, crime, location, date)
-        messagebox.showinfo("Succes", "Record added successfully!")
-        add_window.destroy()
+        frame = tk.Frame(add_window)
+        frame.place(relx=0.20, y=80)
+        
+        #Name
+        criminal_var = tk.StringVar()
+        criminal_var.set("Select Criminal")  # Default value
+        criminals_list = dbs.getCriminalList()
+        tk.Label(frame, text="Criminal:", font=("Arial", 14, "bold")).grid(row=1, column=0, padx=10, pady=10, sticky="w")
+        crime_dropdown = tk.OptionMenu(frame, criminal_var, *criminals_list)
+        crime_dropdown.grid(row=1, column=1, padx=10, pady=10)
+        crime_dropdown.config(width=30, bd=3)
+        
+        #Crime
+        crime_var = tk.StringVar()
+        crime_var.set("Select Crime")
+        crime_list = dbs.getCrimeList()
+        tk.Label(frame, text="Crime:", font=("Arial", 14, "bold")).grid(row=2, column=0, padx=10, pady=10, sticky="w")
+        crime_dropdown = tk.OptionMenu(frame, crime_var, *crime_list)
+        crime_dropdown.grid(row=2, column=1, padx=10, pady=10)
+        crime_dropdown.config(width=30, bd=3)
+        
+        #Location
+        tk.Label(frame, text="Enter Location: ", font=("Arial", 14, "bold")).grid(row=3, column=0, padx=5, pady=10, sticky="w")
+        criminalLocation = tk.Entry(frame, width=30, bd=3)
+        criminalLocation.grid(row=3, column=1, padx=2, pady=10)
+        
+        #Date
+        tk.Label(frame, text="Enter Date(YEAR): ", font=("Arial", 14, "bold")).grid(row=4, column=0, padx=5, pady=10, sticky="w")
+        recordDate = tk.Entry(frame, width=30, bd=3)
+        recordDate.grid(row=4, column=1, padx=2, pady=10)
+        
+        def add_to_db():
+            name = criminalName.get().strip()
+            crime = crime_var.get().strip()
+            location = criminalLocation.get().strip()
+            date = recordDate.get().strip()
+            
+            if name == "" or location == "" or date == "":
+                messagebox.showerror("Error", "Name, Location and Date cannot be empty!")
+                return
+            
+            dbs.add_record(randNum, name, crime, location, date)
+            messagebox.showinfo("Succes", "Record added successfully!")
+            add_window.destroy()
 
-    submit = tk.Button(add_window, text="Submit", width=10, bd=5, font=("Arial", 12, "bold"), fg="White", bg="black", command=add_to_db)
-    submit.place(relx=0.4, y=350)
+        submit = tk.Button(add_window, text="Submit", width=10, bd=5, font=("Arial", 12, "bold"), fg="White", bg="black", command=add_to_db)
+        submit.place(relx=0.4, y=350)
 
 dbs.connectDb()
 
@@ -114,7 +114,7 @@ def editRecord():
                 crime_var = tk.StringVar()
                 crime_var.set(crimData["crime"])
                 tk.Label(frame, text="Crime: ", font=("Arial", 14, "bold")).grid(row=5, column=0, padx=10, pady=10, sticky="w")
-                crime_options = ["Felony", "Misdemeanor", "Theft", "Assault", "Fraud"]
+                crime_options = dbs.getCrimeList()
                 crime_dropdown = tk.OptionMenu(frame, crime_var, *crime_options)
                 crime_dropdown.grid(row=5, column=1, padx=220, pady=10)
                 crime_dropdown.config(width=24, bd=3)
@@ -139,15 +139,15 @@ def editRecord():
                     crimDesc = crime_var.get().strip()
                     crimeLoc = criminalLocation.get().strip()
                     crimeDate = recordDate.get().strip()
-                    if (messagebox.askokcancel(title="Confirm update", message="Are you sure you want to update the record?")): 
+                    if (messagebox.askokcancel("Confirm update", "Are you sure you want to update the record?")): 
                         
                         dbs.editRecord(crimId, crimName, crimDesc, crimeLoc, crimeDate)
-                        messagebox.showinfo(title="Update Success!", message="Successfully updated the record!")
+                        messagebox.showinfo("Update Success!", "Successfully updated the record!")
                     else:
                         edit_window.focus_force()
                 
                 def cancelEdit():
-                    if (messagebox.askyesno(title="Cancel Edit", message="Are you sure you want to cancel editing? Unsaved changes will be lost.")):
+                    if (messagebox.askyesno("Cancel Edit", "Are you sure you want to cancel editing? Unsaved changes will be lost.")):
                         edit_window.destroy()
                     
 
@@ -175,19 +175,44 @@ def editCrime():
     crime_var = tk.StringVar()
     crime_var.set("Select Crime")  # Default value
 
-    crime_options = ["Murder", "Illegal Drug Trade", "Theft", "Assault", "Fraud", 
-                    "Domestic Violence", "Slander", "Malicious Mischief", "Cyber Libel", "Identity Theft"]  #rereplace to ng dynamic(nakabase sa database)
-
+    crime_options = dbs.getCrimeList()
     tk.Label(frame, text="Select Crime to Edit:", font=("Arial", 14, "bold")).grid(row=1, column=0, padx=10, pady=10, sticky="w")
-
     crime_dropdown = tk.OptionMenu(frame, crime_var, *crime_options)
     crime_dropdown.grid(row=1, column=1, padx=10, pady=10)
     crime_dropdown.config(width=30, bd=3)
+
+    
+def addCriminal():
+    criminal_window = tk.Toplevel()
+    criminal_window.title("Add Record")
+    criminal_window.geometry("800x400+600+50")
+
+    title_label = tk.Label(criminal_window, text="Add Criminal", font=("Arial", 20, "bold"))
+    title_label.place(relx=0.35, y=20)
+    frame = tk.Frame(criminal_window)
+    frame.place(relx=0.20, y=80)
+   
+    tk.Label(frame, text="Enter Name: ", font=("Arial", 14, "bold")).grid(row=1, column=0, padx=5, pady=10, sticky="e")
+    criminalName = tk.Entry(frame, width=30, bd=3)
+    criminalName.grid(row=1, column=1, padx=2, pady=10)
+
+    def submitEdit():
+        name = criminalName.get().strip()
+        if messagebox.askyesno("Confirm Addition of Criminal", f"Do you wish to add {name} in the criminal list?"):
+            dbs.addCriminal(name)
+            messagebox.showinfo("Criminal Addition Success", f"{name} was added to the criminal list.")
+            criminal_window.destroy()
+        
+
+    criminalAdd = tk.Button(frame, text="Add Criminal", font=("Arial", 10, "bold"), command=submitEdit)
+    criminalAdd.grid(row=10, column=1, padx=10,columnspan=2, pady=10, sticky="nw")
 
 
 
 label = tk.Label(root, text="CRIME RECORD MANAGEMENT", font=("Arial", 20, "bold"))
 label.pack(padx=10, pady=20)
+addcrim = tk.Button(root, text="Add Criminal", width=30, bd=5, font=("Arial", 12, "bold"), fg="White", bg="black", command=addCriminal)
+addcrim.pack(padx=20, pady=20)
 add = tk.Button(root, text="Add Record", width=30, bd=5, font=("Arial", 12, "bold"), fg="White", bg="black", command=addRecord)
 add.pack(padx=20, pady=20)
 edit = tk.Button(root, text="Edit Record", width=30, bd=5, font=("Arial", 12, "bold"), fg="White", bg="black", command=editRecord)

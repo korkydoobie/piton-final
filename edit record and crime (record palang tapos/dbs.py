@@ -1,5 +1,5 @@
 import sqlite3
-
+from tkinter import messagebox
 def connectDb():
     conn = sqlite3.connect("criminal_records.db")
     cur = conn.cursor()
@@ -86,7 +86,12 @@ def getCriminalData(criminal_id):
     else:
         return None
     
-    
+def addCriminal(cname):
+        conn = sqlite3.connect("criminal_records.db")
+        cur = conn.cursor()
+        cur.execute("INSERT INTO Criminals (name) VALUES (?)", (cname,))
+        conn.commit()
+        conn.close()
         
 
 def editRecord(criminal_id, criminal_name, criminal_desc, criminal_location, criminal_date):
@@ -96,6 +101,24 @@ def editRecord(criminal_id, criminal_name, criminal_desc, criminal_location, cri
         conn.commit()
         conn.close()
 
+def getCriminalList():
+     conn = sqlite3.connect("criminal_records.db")
+     cur = conn.cursor()
+     cur.execute("SELECT name FROM Criminals")
+     criminals = [row[0] for row in cur.fetchall()]
+     conn.close()
 
-        
+     if not criminals:
+          messagebox.showwarning("No criminals found","Criminal list is empty. Please add a criminal first.")
+          return None
+          
+     return criminals     
+
+def getCrimeList():
+     conn = sqlite3.connect("criminal_records.db")
+     cur = conn.cursor()
+     cur.execute("SELECT crime_name FROM crimes")
+     crimes = [row[0] for row in cur.fetchall()]
+     conn.close()
+     return crimes
     #end of carl methods
