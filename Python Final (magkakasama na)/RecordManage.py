@@ -56,32 +56,14 @@ class RecordManage:
             recordDate = tk.Entry(frame, width=30, bd=3)
             recordDate.grid(row=4, column=1, padx=2, pady=10)
 
-            tk.Label(frame, text="Upload Mugshot: ", font=("Arial", 14, "bold")).grid(row=5, column=0, padx=5, pady=10, sticky="e")
-        
-            def upload_image():
-                global image_path
-                file_path = filedialog.askopenfilename(filetypes=[("Image Files", "*.png;*.jpg;*.jpeg")])
-                if file_path:
-                    image_path = file_path
-                    print(f"Selected Image: {file_path}")
-                
-                
-            uploadbtn = tk.Button(frame, text="Browse files", width=26, command=upload_image)
-            uploadbtn.grid(row=5, column=1, padx=5, pady=10)
 
             date = recordDate.get()
             
             def add_to_db():
                 criminal_id = criminal_var.get().strip(" - ")[0] #criminal id
-                crime_id = crime_var.get().strip(" - ")[0]
+                crime_id = crime_var.get().strip(" - ")[0] # crime id
                 location = criminalLocation.get().strip()
                 date = recordDate.get().strip()
-                blobplaceholder = None #temporary
-
-                blobplaceholder = None
-                if image_path:
-                    with open(image_path, "rb") as file:
-                        image_blob = file.read()
                 
                 if criminal_var.get() == "Select Criminal" or crime_var.get() =="Select Crime" or location == "" or date == "":
                     messagebox.showerror("Error", "Please complete the details of the record")
@@ -91,10 +73,10 @@ class RecordManage:
                     messagebox.showerror("Invalid date", "Year must be numbers only.")
                 
                 if (messagebox.askyesno("Confirm Criminal Record Add", "Do you wish to add the criminal record?")):
-                    dbs.add_record(criminal_id, crime_id, location, date, blobplaceholder)
+                    dbs.add_record(criminal_id, crime_id, location, date)
                     messagebox.showinfo("Successful Criminal Record Addition!", "Criminal Record was successfully added!")
-                
 
+                add_window.destroy()
 
             submit = tk.Button(frame, text="Submit", width=10, bd=5, font=("Arial", 12, "bold"), fg="White", bg="black" ,command=add_to_db)
             submit.grid(row=6, column=1, padx=2, pady=10)
