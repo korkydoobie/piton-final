@@ -73,7 +73,6 @@ class CriminalRecordApp:
         tk.Button(edit_window, text="Edit Record", width=30, bd=5, font=("Arial", 12, "bold"), fg="White", bg="black", command=self.record_manager.editRecord).place(x=250, y=300)
 
         tk.Button(edit_window, text="Back", width=30, bd=5, font=("Arial", 12, "bold"), fg="White", bg="black", command=lambda: self.go_back(edit_window)).place(x=250, y=400)
-        tk.Button(edit_window, text="Back", width=30, bd=5, font=("Arial", 12, "bold"), fg="White", bg="black", command=lambda: self.go_back(edit_window)).place(x=250, y=400)
     def delete_record(self):
 
         delete_window = tk.Toplevel(self.root)
