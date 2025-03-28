@@ -3,7 +3,7 @@ from tkinter import messagebox
 import sqlite3
 import dbs
 import random
-from tkinter import filedialog
+from tkinter import filedialog, ttk
 from PIL import Image, ImageTk
 import io
 
@@ -89,43 +89,62 @@ class RecordManage:
         else:
             delRecord = tk.Toplevel(self.root)
             delRecord.title("Delete Record")
-            delRecord.geometry("800x800+550+100")
-                
-            title_label = tk.Label(delRecord, text="DELETE RECORD", font=("Arial", 20, "bold"))                
+            delRecord.geometry("800x600+550+100")
+
+            title_label = tk.Label(delRecord, text="DELETE RECORD", font=("Arial", 20, "bold"))
             title_label.pack(padx=10, pady=20)
 
+            # Search area
+            search_frame = tk.Frame(delRecord)
+            search_frame.pack(fill=tk.X, pady=(0, 10))
 
-            tk.Label(delRecord, text="Select a Record to Delete", font=("Arial", 14, "bold")).pack(pady=10)
-            search_entry = tk.Entry(delRecord, font=("Arial", 14), textvariable=self.crimIdentry)
-            search_entry.pack(pady=10)
-                
-            record_list = tk.Listbox(delRecord, font=("Arial", 12), height=6)
-            record_list.pack(pady=5, fill=tk.BOTH, expand=True)
-                
+            tk.Label(search_frame, text="Search Record:", font=("Arial", 14, "bold")).pack(side=tk.LEFT, padx=5)
+            search_entry = tk.Entry(search_frame, font=("Arial", 14), textvariable=self.crimIdentry)
+            search_entry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=5)
+
+            # Results table
+            headers = ["Record ID", "Criminal Name", "Crime", "Location", "Year of Arrest"]
+            self.tree = ttk.Treeview(delRecord, columns=headers, show="headings")
+
+            # Configure columns
+            col_widths = [80, 150, 150, 150, 100]
+            for col, width in zip(headers, col_widths):
+                self.tree.heading(col, text=col, anchor='center')
+                self.tree.column(col, width=width, anchor='center')
+
+            # Add scrollbars
+            y_scroll = ttk.Scrollbar(delRecord, orient="vertical", command=self.tree.yview)
+            x_scroll = ttk.Scrollbar(delRecord, orient="horizontal", command=self.tree.xview)
+            self.tree.configure(yscrollcommand=y_scroll.set, xscrollcommand=x_scroll.set)
+
+            self.tree.pack(pady=5, fill=tk.BOTH, expand=True)
+            y_scroll.pack(side=tk.RIGHT, fill=tk.Y)
+            x_scroll.pack(side=tk.BOTTOM, fill=tk.X)
+
             def populate_record_list(search_term=""):
-                record_list.delete(0, tk.END)  # Clear existing items
+                self.tree.delete(*self.tree.get_children())  # Clear existing items
                 results = dbs.searchRecords(search_term)  # Get all records
                 if results:
                     for row in results:
-                        record_list.insert(tk.END, f"Record ID: {row[6]} - {row[1].title()} - {row[2].title()} - {row[3].title()} - {row[4]}")
+                        self.tree.insert("", "end", values=(row[6], row[1].title(), row[2].title(), row[3].title(), row[4]))
                 else:
-                    record_list.insert(tk.END, "No records found")
+                    self.tree.insert("", "end", values=("No records found", "", "", "", ""))
 
-                #call the function to populate the listbox
+            #call the function to populate the listbox
             populate_record_list()
 
-                # Bind the search entry to the populate_record_list function
+            # Bind the search entry to the populate_record_list function
             self.crimIdentry.trace_add("write", lambda *args: populate_record_list(self.crimIdentry.get()))
-                
+
             def delete():
-                delete_selected = record_list.curselection()
-                if not delete_selected:
+                selected_item = self.tree.selection()
+                if not selected_item:
                     messagebox.showerror("Error", "Please select a record to delete.")
                     return
-                        
-                delete_selected = record_list.get(delete_selected[0])
-                record_id = delete_selected.split()[2]
-                    
+
+                selected_record = self.tree.item(selected_item, 'values')
+                record_id = selected_record[0]
+
                 if messagebox.askyesno("Confirm Deletion", "Are you sure you want to delete this record?"):
                     dbs.deleteRecord(record_id)
                     messagebox.showinfo("Success", "Record deleted successfully!")
@@ -135,141 +154,235 @@ class RecordManage:
             delbtn.pack(pady=10)
     #END#####
 
-    
+    def search_crime_record(self):
+        self.root.withdraw()
+        self.add_window = tk.Toplevel(self.root)
+        self.add_window.title("SEARCH CRIME RECORD")
+        self.add_window.geometry("1000x700+400+50")
+
+         # Main container (now with 2 columns)
+        main_frame = tk.Frame(self.add_window)
+        main_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        
+        # Right column (search + results) - 70% width
+        right_frame = tk.Frame(main_frame)
+        right_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
+         
+        # ===== RIGHT SIDE: SEARCH + RESULTS ===== 
+        # Search area
+        search_frame = tk.Frame(right_frame)
+        search_frame.pack(fill=tk.X, pady=(0, 10))
+        
+        tk.Label(search_frame, 
+                text="SEARCH CRIME RECORD", 
+                font=("Arial", 16, "bold")).pack(pady=5)
+        
+        self.search_entry = tk.Entry(search_frame, 
+                                font=("Arial", 14), 
+                                textvariable=self.crimIdentry) #for dynamic changes
+        self.search_entry.pack(fill=tk.X, pady=5)
+        
+        # Results table
+        headers = ["ID", "Crime Name", "Confinement"]
+        self.tree = ttk.Treeview(right_frame, columns=headers, show="headings")
+        
+        # Configure columns
+        col_widths = [80, 150, 150]
+        for col, width in zip(headers, col_widths):
+            self.tree.heading(col, text=col, anchor='center')
+            self.tree.column(col, width=width, anchor='center')
+        
+        # Add scrollbars
+        y_scroll = ttk.Scrollbar(right_frame, orient="vertical", command=self.tree.yview)
+        x_scroll = ttk.Scrollbar(right_frame, orient="horizontal", command=self.tree.xview)
+        self.tree.configure(yscrollcommand=y_scroll.set, xscrollcommand=x_scroll.set)
+        
+        self.tree.pack(fill=tk.BOTH, expand=True)
+        y_scroll.pack(side=tk.RIGHT, fill=tk.Y)
+        x_scroll.pack(side=tk.BOTTOM, fill=tk.X)
+        
+        # Bind selection event
+        #self.tree.bind("<<TreeviewSelect>>", self.show_details2)
+        
+        #populate the list
+        self.crimIdentry.trace_add("write", lambda *args: self.handle_search2())
+        self.handle_search2()
+
+    def handle_search2(self):
+        try:
+            crime_id = self.crimIdentry.get().strip() #get the inputted sht in the search bar
+            print(f"Searching for: {crime_id}")
+            
+            results = dbs.searchCrime(crime_id) #use the method searchCrime
+            print(f"Found {len(results)} records") 
+            
+            if not results:
+                print("No results found")  # Debug print
+                self.tree.delete(*self.tree.get_children())
+                self.tree.insert("", "end", values=("No records", "", ""))
+                return
+                
+            self.tree.delete(*self.tree.get_children())
+            for row in results:
+                self.tree.insert("", "end", values=row)
+                
+        except Exception as e:
+            print(f"Database error: {e}")  # Debug print
+            self.tree.delete(*self.tree.get_children())
+            self.tree.insert("", "end", values=("Database error", "", ""))
 
     def search_criminal_record(self):
         self.root.withdraw()
         self.add_window = tk.Toplevel(self.root)
         self.add_window.title("SEARCH CRIMINAL RECORD")
-        self.add_window.geometry("800x600+550+100")
+        self.add_window.geometry("1000x700+400+50")  # Larger window for better layout
         
-        self.record_manager = RecordManage(self.root)
-
-        self.crimIdentry = tk.StringVar(value="")
-
-        self.label = tk.Label(self.add_window, text="SEARCH CRIMINAL RECORD", font=("Arial", 20, "bold"))
-        self.label.pack(pady=10)
+        # Main container (now with 2 columns)
+        main_frame = tk.Frame(self.add_window)
+        main_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
         
-        self.search_entry = tk.Entry(self.add_window, font=("Arial", 14), textvariable=self.crimIdentry)
-        self.search_entry.pack(pady=5)
-
+        # Left column (image + details) - 30% width
+        left_frame = tk.Frame(main_frame, width=300, bg="lightgray")
+        left_frame.pack(side=tk.LEFT, fill=tk.Y, padx=(0, 10))
+        left_frame.pack_propagate(False)  # Prevent frame from shrinking
+        
+        # Right column (search + results) - 70% width
+        right_frame = tk.Frame(main_frame)
+        right_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
+        
+        # ===== LEFT SIDE: IMAGE + DETAILS =====
+        # Image display
+        self.img_frame = tk.Frame(left_frame, bg="white", height=200)
+        self.img_frame.pack(fill=tk.X, pady=(0, 10))
+        
+        self.lbl_img = tk.Label(self.img_frame, bg="white")
+        self.lbl_img.pack(pady=20, padx=20)
+        
+        # Details display
+        self.details_frame = tk.Frame(left_frame, bg="lightgray")
+        self.details_frame.pack(fill=tk.BOTH, expand=True)
+        
+        self.details_text = tk.Text(self.details_frame, 
+                                bg="lightgray", 
+                                font=("Arial", 12),
+                                wrap=tk.WORD,
+                                padx=10,
+                                pady=10,
+                                height=10)
+        self.details_text.pack(fill=tk.BOTH, expand=True)
+        self.details_text.insert(tk.END, "Select a record to view details")
+        self.details_text.config(state=tk.DISABLED)  # Make it read-only
+        
+        # ===== RIGHT SIDE: SEARCH + RESULTS ===== 
+        # Search area
+        search_frame = tk.Frame(right_frame)
+        search_frame.pack(fill=tk.X, pady=(0, 10))
+        
+        tk.Label(search_frame, 
+                text="SEARCH CRIMINAL RECORD", 
+                font=("Arial", 16, "bold")).pack(pady=5)
+        
+        self.search_entry = tk.Entry(search_frame, 
+                                font=("Arial", 14), 
+                                textvariable=self.crimIdentry)
+        self.search_entry.pack(fill=tk.X, pady=5)
+        
+        # Results table
+        headers = ["ID", "Name", "Crime", "Location", "Year"]
+        self.tree = ttk.Treeview(right_frame, columns=headers, show="headings")
+        
+        # Configure columns
+        col_widths = [80, 150, 150, 150, 100]
+        for col, width in zip(headers, col_widths):
+            self.tree.heading(col, text=col, anchor='center')
+            self.tree.column(col, width=width, anchor='center')
+        
+        # Add scrollbars
+        y_scroll = ttk.Scrollbar(right_frame, orient="vertical", command=self.tree.yview)
+        x_scroll = ttk.Scrollbar(right_frame, orient="horizontal", command=self.tree.xview)
+        self.tree.configure(yscrollcommand=y_scroll.set, xscrollcommand=x_scroll.set)
+        
+        self.tree.pack(fill=tk.BOTH, expand=True)
+        y_scroll.pack(side=tk.RIGHT, fill=tk.Y)
+        x_scroll.pack(side=tk.BOTTOM, fill=tk.X)
+        
+        # Bind selection event
+        self.tree.bind("<<TreeviewSelect>>", self.show_details)
+        
+        #populate the list
         self.crimIdentry.trace_add("write", lambda *args: self.handle_search())
-        self.search_button = tk.Button(self.add_window, text="Search", font=("Arial", 12), command=self.handle_search)
-        self.search_button.pack(pady=5)
-
-        self.results_list = tk.Listbox(self.add_window, font=("Arial", 12), height=6)
-        self.results_list.pack(pady=5, fill=tk.BOTH, expand=True)
-
-        self.results_list.bind("<<ListboxSelect>>", self.show_details)
-
-        self.details_label = tk.Label(self.add_window, text="Select a record", font=("Arial", 12), justify="left")
-        self.details_label.pack(side=tk.LEFT, pady=10)
-        self.lbl = tk.Label(self.add_window)
-        self.lbl.pack(side=tk.LEFT)
-
         self.handle_search()
 
     def handle_search(self):
-        """Fetch records from database and update the listbox."""
-        criminal_id = self.crimIdentry.get().strip()
-        
         try:
-            results = dbs.searchRecords(criminal_id)  # Call the function
-        except:
-            results = criminal_id.isdigit()
-
-        self.results_list.delete(0, tk.END)  # Clear previous results
-        self.details_label.config(text='Select a record')
-
-        if results == False:
-            print('INVALID ID')
-            self.results_list.insert(tk.END, "Invalid ID")
-            return
-        elif results:
+            criminal_id = self.crimIdentry.get().strip()
+            print(f"Searching for: {criminal_id}")
+            
+            results = dbs.searchRecords(criminal_id)
+            print(f"Found {len(results)} records") 
+            
+            if not results:
+                print("No results found")  # Debug print
+                self.tree.delete(*self.tree.get_children())
+                self.tree.insert("", "end", values=("No records", "", "", "", ""))
+                return
+                
+            self.tree.delete(*self.tree.get_children())
             for row in results:
-                self.results_list.insert(tk.END, f"ID: {row[0]} - {row[1].title()} - {row[2].title()} - {row[3].title()} - {row[4]}")  # ID and Name
-        else:
-            self.results_list.insert(tk.END, "No results found")
+                self.tree.insert("", "end", values=row)
+                
+        except Exception as e:
+            print(f"Database error: {e}")  # Debug print
+            self.tree.delete(*self.tree.get_children())
+            self.tree.insert("", "end", values=("Database error", "", "", "", ""))
         
 
     def show_details(self, event):
-        """Show full details when a record is selected."""
-        selected_index = self.results_list.curselection()
-        if not selected_index:
+        selected = self.tree.focus()
+        if not selected:
+            return
+            
+        item_data = self.tree.item(selected)['values']
+        if not item_data or len(item_data) < 5:
             return
         
-        selected_text = self.results_list.get(selected_index[0])
+        releaseyr = dbs.searchSpecificRecord(item_data[0], item_data[2], item_data[3], item_data[4])
+        #returns the tuple of sql which has the value of year release
+
+
+        #FOR THE PICTURE
+        criminal_id = item_data[0]
+        criminal_data = dbs.searchCriminal(criminal_id)
         
-        split_list = selected_text.split(" - ")
-
-        id_value = split_list[0].replace("ID: ", "").strip()  # Remove "ID: "
-        first_name = split_list[1].strip()
-        crime = split_list[2].strip()
-        location = split_list[3].strip()
-        date = split_list[4].strip()
-
-        selected = selected_text.split()
-        criminal_id = int(selected[1])  # Extract the ID
-
-        # Fetch full details (assuming dbs.searchRecords returns all columns)
-        results = dbs.searchRecords(criminal_id)
+        if not criminal_data:
+            return
         
-        if results:
-            data = results[0]  # Get first matching record
-            details_text = f"ID: {id_value}\nName: {first_name.title()}\nCrime: {crime.title()}\nLocation: {location.title()}\nArrest: {date}\nRelease: {data[5]}\n"
-            
-            imgresults = dbs.searchCriminal(data[0])
-            
-            img_data = imgresults[2]  # Get BLOB data
-            img = Image.open(io.BytesIO(img_data))  # Convert BLOB to an Image
-            img = img.resize((100, 100), Image.LANCZOS)
-            img = ImageTk.PhotoImage(img)  # Convert to Tkinter-compatible format
-
-            self.lbl.configure(image=img)  # Update the label
-            self.lbl.image = img 
-            
-            self.details_label.config(text=details_text)
-
-
-
-
-
-
-
-
-
-
-
-
-
-'''
-        def delete_criminal_record(self):
-        delCriminal = tk.Toplevel(self.root)
-        delCriminal.title("Delete Criminal Record")
-        delCriminal.geometry("800x800+550+100")
-
-        title_label = tk.Label(delCriminal, text="DELETE CRIMINAL RECORD", font=("Arial", 20, "bold"))
-        title_label.pack(padx=10, pady=20)
-
-        frame = tk.Frame(delCriminal)
-        frame.place(relx=0.20, y=80)
-
-        tk.Label(frame, text="Enter Criminal ID: ", font=("Arial", 14, "bold")).grid(row=0, column=0, padx=5, pady=10, sticky="e")
-        criminal_id_entry = tk.Entry(frame, width=30, bd=3)
-        criminal_id_entry.grid(row=0, column=1, padx=2, pady=10)
-
-        def delete():
-            criminal_id = criminal_id_entry.get().strip()
-            if not criminal_id:
-                messagebox.showerror("Error", "Please enter a Criminal ID!")
-                return
-
-            if dbs.delete_criminal_record(criminal_id):
-                messagebox.showinfo("Success", "Record deleted successfully!")
-                delCriminal.destroy()
-            else:
-                messagebox.showerror("Error", "Failed to delete the record!")
-
-        enter_btn = tk.Button(frame, text="Enter", width=5, bd=5, font=("Arial", 12, "bold"), fg="White", bg="black", command=delete)
-        enter_btn.grid(row=0, column=3, columnspan=2, padx=20)
-'''
+        # Update details text
+        details = (
+            f"ID: {item_data[0]}\n\n"
+            f"Name: {item_data[1].title()}\n\n"
+            f"Crime: {item_data[2].title()}\n\n"
+            f"Location: {item_data[3].title()}\n\n"
+            f"Arrest Year: {item_data[4]}\n\n"
+            f"Release Year: {releaseyr[0]}" #accessing the year release
+        )
+        
+        self.details_text.config(state=tk.NORMAL)
+        self.details_text.delete(1.0, tk.END)
+        self.details_text.insert(tk.END, details)
+        self.details_text.config(state=tk.DISABLED)
+        
+        # Update image
+        if len(criminal_data) > 2 and criminal_data[2]:
+            try:
+                img = Image.open(io.BytesIO(criminal_data[2]))
+                img = img.resize((200, 200), Image.LANCZOS)
+                photo_img = ImageTk.PhotoImage(img)
+                
+                self.lbl_img.config(image=photo_img)
+                self.lbl_img.image = photo_img
+            except Exception as e:
+                print(f"Image error: {e}")
+                self.lbl_img.config(image='')
+        else:
+            self.lbl_img.config(image='')

@@ -3,13 +3,12 @@ import random
 import dbs
 from tkinter import messagebox
 import sqlite3
-from tkinter import filedialog
+from tkinter import filedialog, ttk
 from PIL import Image, ImageTk
 
 class CriminalManage:
     def __init__(self, root):
         self.root = root
-        
 
     def add_criminal(self):
         criminal_window = tk.Toplevel()
@@ -60,44 +59,64 @@ class CriminalManage:
         else:
             delRecord = tk.Toplevel(self.root)
             delRecord.title("Delete Criminal Record")
-            delRecord.geometry("800x800+550+100")
-                
-            title_label = tk.Label(delRecord, text="DELETE CRIMINAL RECORD", font=("Arial", 20, "bold"))                
-            title_label.pack(padx=10, pady=20)
+            delRecord.geometry("800x600+550+100")
             
             self.crimIdentry = tk.StringVar()
+            
+            title_label = tk.Label(delRecord, text="DELETE CRIMINAL RECORD", font=("Arial", 20, "bold"))
+            title_label.pack(padx=10, pady=20)
 
-            tk.Label(delRecord, text="Select a Criminal to Delete", font=("Arial", 14, "bold")).pack(pady=10)
-            search_entry = tk.Entry(delRecord, font=("Arial", 14), textvariable=self.crimIdentry)
-            search_entry.pack(pady=10)
-                
-            criminal_list = tk.Listbox(delRecord, font=("Arial", 12), height=6)
-            criminal_list.pack(pady=5, fill=tk.BOTH, expand=True)
-                
+            # Search area
+            search_frame = tk.Frame(delRecord)
+            search_frame.pack(fill=tk.X, pady=(0, 10))
+
+            tk.Label(search_frame, text="Search Criminal:", font=("Arial", 14, "bold")).pack(side=tk.LEFT, padx=5)
+            search_entry = tk.Entry(search_frame, font=("Arial", 14), textvariable=self.crimIdentry)
+            search_entry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=5)
+
+            # Results table
+            headers = ["Criminal ID", "Criminal Name"]
+            self.tree = ttk.Treeview(delRecord, columns=headers, show="headings")
+
+            # Configure columns
+            col_widths = [100, 200]
+            for col, width in zip(headers, col_widths):
+                self.tree.heading(col, text=col, anchor='center')
+                self.tree.column(col, width=width, anchor='center')
+
+            # Add scrollbars
+            y_scroll = ttk.Scrollbar(delRecord, orient="vertical", command=self.tree.yview)
+            x_scroll = ttk.Scrollbar(delRecord, orient="horizontal", command=self.tree.xview)
+            self.tree.configure(yscrollcommand=y_scroll.set, xscrollcommand=x_scroll.set)
+
+            self.tree.pack(pady=5, fill=tk.BOTH, expand=True)
+            y_scroll.pack(side=tk.RIGHT, fill=tk.Y)
+            x_scroll.pack(side=tk.BOTTOM, fill=tk.X)
+
             def populate_criminal_list(search_term=""):
-                criminal_list.delete(0, tk.END)  # Clear existing items
+                self.tree.delete(*self.tree.get_children())  # Clear existing items
                 results = dbs.dynSearch(search_term, "criminals")  # Get all records
                 if results:
                     for row in results:
-                        criminal_list.insert(tk.END, f"ID: {row[0]} - {row[1].title()}")
+                        self.tree.insert("", "end", values=(row[0], row[1].title()))
                 else:
-                    criminal_list.insert(tk.END, "No criminal records found")
+                    self.tree.insert("", "end", values=("No criminal records found", ""))
 
-                #call the function to populate the listbox
+            #call the function to populate the listbox
             populate_criminal_list()
 
-                # Bind the search entry to the populate_criminal_list function
+            # Bind the search entry to the populate_criminal_list function
             self.crimIdentry.trace_add("write", lambda *args: populate_criminal_list(self.crimIdentry.get()))
-                
+
             def delete():
-                delete_selected = criminal_list.curselection()
-                if not delete_selected:
+                selected_item = self.tree.selection()
+                if not selected_item:
                     messagebox.showerror("Error", "Please select a criminal record to delete.")
                     return
-                        
-                delete_selected = criminal_list.get(delete_selected[0])
-                criminal_id = delete_selected.split()[1]
-                    
+
+                selected_record = self.tree.item(selected_item, 'values')
+                criminal_id = selected_record[0]
+
                 if messagebox.askyesno("Confirm Deletion", """Are you sure you want to delete this criminal record?
 This action will also delete all the records linked to this criminal."""):
                     dbs.deleteCriminal(criminal_id)
@@ -106,4 +125,3 @@ This action will also delete all the records linked to this criminal."""):
 
             delbtn = tk.Button(delRecord, text="Delete", width=10, bd=5, font=("Arial", 12, "bold"), fg="White", bg="black", command=delete)
             delbtn.pack(pady=10)
-

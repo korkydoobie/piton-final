@@ -140,46 +140,9 @@ def checkExist_crimes(crime_id):
     return result is not None
  
 #checks if criminal is available for deletion, if criminal_id is not present in records table
-def get_criminals_not_in_records():
-    conn = sqlite3.connect("criminal_records.db")
-    cur = conn.cursor()
-
-    try:
-        # SQL query to find criminals whose IDs are not in the records table
-        cur.execute("""
-            SELECT criminal_id, criminal_name
-            FROM criminals
-            WHERE criminal_id NOT IN (SELECT criminal_id FROM records)
-        """)
-        criminals_not_in_records = cur.fetchall()
-        return criminals_not_in_records
-    
-    except sqlite3.Error as e:
-        print(f"An error occurred: {e}")
-        return []
-    finally:
-        conn.close()
 
 #checks if crimeis available for deletion, if crime_id is not present in records table
-def get_crime_not_in_records():
-    conn = sqlite3.connect("criminal_records.db")
-    cur = conn.cursor()
 
-    try:
-        # SQL query to find criminals whose IDs are not in the records table
-        cur.execute("""
-            SELECT crime_id, crime_name
-            FROM crimes
-            WHERE crime_id NOT IN (SELECT crime_id FROM records)
-        """)
-        crime_not_in_records = cur.fetchall()
-        return crime_not_in_records
-    
-    except sqlite3.Error as e:
-        print(f"An error occurred: {e}")
-        return []
-    finally:
-        conn.close()
  ####END of RONNSHITS######
 
 # def getCriminalData(criminal_id):
@@ -216,7 +179,7 @@ def deleteRecord(id):
     cur.execute("DELETE FROM records WHERE record_id = ?", (id,))
     conn.commit()
     conn.close()
-    
+
 def deleteCriminal(id):
     conn = sqlite3.connect("criminal_records.db")
     cur = conn.cursor()
@@ -284,7 +247,7 @@ def searchRecords(id):
         crimes.crime_name, 
         records.location, 
         records.year_of_arrest, 
-        records.year_of_release,
+        records.year_of_release, 
         records.record_id
     FROM records
     INNER JOIN criminals ON records.criminal_id = criminals.criminal_id
@@ -300,6 +263,52 @@ def searchRecords(id):
 
     conn.close()
     return results  
+
+def searchSpecificRecord(id, crime, location, year):
+    conn = sqlite3.connect("criminal_records.db")
+    cur = conn.cursor()
+
+    crimeId = searchCrime(crime)
+    try:
+        cur.execute("""
+                    SELECT
+                    records.year_of_release
+                    FROM records
+                    WHERE records.criminal_id = ? AND records.crime_id = ? AND records.location = ? AND records.year_of_arrest = ?;
+                    """, (id, crimeId[0][0], location, year))
+        results = cur.fetchone()
+        print(results)
+    except:
+        results = []
+
+    conn.close()
+    return results
+    
+
+def searchCrime(id):
+    conn = sqlite3.connect("criminal_records.db")
+    cur = conn.cursor()
+    try:
+        tempId = id + "%" #mag error if INT ung pinasa sa function na to
+    except:
+        tempId = id #this is for INT inputs
+    
+    query = """
+    SELECT 
+        crime_id,
+        crime_name, 
+        confinement
+    FROM crimes
+    WHERE crimes.crime_name LIKE ? OR CAST(crime_id AS TEXT) LIKE ?;
+    """
+    try:
+        cur.execute(query, (tempId, tempId))
+        results = cur.fetchall()
+    except Exception as e:
+        print(f"SQL Error: {e}")  
+        results = []  # Return an empty list 
+    conn.close()
+    return results  
     
 
 def searchCriminal(id):
@@ -308,7 +317,7 @@ def searchCriminal(id):
     cur.execute("SELECT * FROM criminals WHERE criminal_id = ?", (id,))
     result = cur.fetchone()
     return result
-
+    
 def dynSearch(temp, type):
     conn = sqlite3.connect("criminal_records.db")
     cur = conn.cursor()
@@ -324,10 +333,10 @@ def dynSearch(temp, type):
             tempId = temp
             
         if type == "criminals":
-            cur.execute("SELECT criminal_id, criminal_name FROM criminals WHERE criminal_id LIKE ? OR criminal_name LIKE ?", (tempId, tempId))
+            cur.execute("SELECT criminal_id, criminal_name FROM criminals WHERE criminal_id LIKE ? OR criminal_name LIKE ? ORDER BY criminal_id ASC", (tempId, tempId))
             
         elif type == "crimes":
-            cur.execute("SELECT crime_id, crime_name FROM crimes WHERE crime_id LIKE ? OR crime_name LIKE ?", (tempId, tempId))
+            cur.execute("SELECT crime_id, crime_name, confinement FROM crimes WHERE crime_id LIKE ? OR crime_name LIKE ? ORDER BY crime_id ASC", (tempId, tempId))
             
         results = cur.fetchall()
     except sqlite3.Error as e:
@@ -337,5 +346,4 @@ def dynSearch(temp, type):
     finally:
         conn.close()
     return results
-
     
