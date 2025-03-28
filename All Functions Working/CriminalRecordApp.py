@@ -62,7 +62,7 @@ class CriminalRecordApp:
         edit_window.title("Delete Record")
         edit_window.geometry("800x400+550+200")
 
-        title_label = tk.Label(edit_window, text="DELETE RECORD", font=("Arial", 20, "bold"))
+        title_label = tk.Label(edit_window, text="EDIT RECORD", font=("Arial", 20, "bold"))
         title_label.place(relx=0.37, y=20)
 
 
